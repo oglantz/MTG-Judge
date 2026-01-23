@@ -100,7 +100,7 @@ class RuleParser:
         self._state = ""
 
 def main():
-    parser = RuleParser("rsrc/rulestext.txt")
+    parser = RuleParser("../rsrc/rulestext.txt")
     documents = parser.buildDocuments()
     [print(doc) for doc in documents]
 
