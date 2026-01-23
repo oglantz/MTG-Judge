@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 import re
 import pathlib
-import faiss
+# import faiss
 
 @dataclass
 class Document:
