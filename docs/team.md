@@ -6,11 +6,11 @@ title:  Team
 # {{ page.title }}
 
 
-## USER 1
-***UCI Net ID***: ucinetid1
+## Owen Glantz
+***UCI Net ID***: oglantz
 
-## USER 2
-***UCI Net ID***: ucinetid2
+## Matthew Elniski
+***UCI Net ID***: elniskim
 
-## USER 3
-***UCI Net ID***: ucinetid3
+## Andy Choi
+***UCI Net ID***: andywc
