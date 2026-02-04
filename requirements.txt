@@ -1,0 +1,17 @@
+# LlamaIndex core for RAG orchestration
+llama-index-core
+
+# FAISS vector store integration for LlamaIndex
+llama-index-vector-stores-faiss
+
+# HuggingFace embedding integration for LlamaIndex
+llama-index-embeddings-huggingface
+
+# Sentence Transformers for local embedding models
+sentence-transformers
+
+# FAISS library for efficient similarity search (CPU version)
+faiss-cpu
+
+# BM25 retriever for LlamaIndex
+llama-index-retrievers-bm25
