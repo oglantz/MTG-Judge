@@ -39,3 +39,4 @@ logs/
 .vscode/
 .idea/
 
+src/slop.py
