@@ -3,7 +3,11 @@ layout: default
 title:  Home
 ---
 
-Source code: https://github.com/USER/PROJECT (_fix this_)
+**Magic: The Gathering has a lot of rules, and they're all weird. Interpretering them is a hard enough task that if you want to be a real judge, you must pass multiple exams. We propose an application driven project leveraging LLM's, Vector DBs, and RL based fine-tuning to make a system that takes in a properly formatted MTG rules question, and outputs a clear, concise, accurate ruling.**
+
+
+Navigate this page using the menu above or the hyperlinks below.
+
 
 Reports:
 
@@ -11,30 +15,5 @@ Reports:
 - [Status](status.html)
 - [Final](final.html)
 
-What's Markdown (`.md`)?
 
-Markdown is markup that lets you write hypertext (HTML) documents
-in easy-to-read and easy-to-write plain text.
-No angle brackets `<></>` required for
-paragraphs, lists, blockquotes, tables, etc.
-
-
-This is a paragraph (in Markdown). Some more
-text here.
-
-This is another paragraph.
-
-This is a list:
-
-- Orange
-- Apple
-- Blueberry
-
-$$x^2 = y^2$$
-
-
-Just getting started with Markdown?
-See the [HTML <-> Markdown Quick Reference (Cheat Sheet)][quickref].
-
-
-[quickref]: https://github.com/mundimark/quickrefs/blob/master/HTML.md
+Source code: https://github.com/oglantz/MTG-Judge
