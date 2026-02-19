@@ -5,12 +5,11 @@ title:  Team
 
 # {{ page.title }}
 
-
 ## Owen Glantz
-***UCI Net ID***: oglantz
+**UCInetID** oglantz · <a href="https://www.linkedin.com/in/owen-glantz/" class="linkedin-badge" target="_blank" rel="noopener">LinkedIn</a>
 
 ## Matthew Elniski
-***UCI Net ID***: elniskim
+**UCInetID** elniskim · <a href="https://www.linkedin.com/in/matthew-elniski-a3050638b/" class="linkedin-badge" target="_blank" rel="noopener">LinkedIn</a>
 
 ## Andy Choi
-***UCI Net ID***: andywc
+**UCInetID** andywc · <a href="https://www.linkedin.com/in/andy-choi-2b503a27b/" class="linkedin-badge" target="_blank" rel="noopener">LinkedIn</a>
