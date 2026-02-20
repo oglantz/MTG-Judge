@@ -76,7 +76,7 @@ class ScryfallClient:
 
 def main():
     client = ScryfallClient()
-    print(client.get_card_info("Humility"))
+    print(client.get_card_info("Trinisphere"))
 
 
 if __name__ == "__main__":
