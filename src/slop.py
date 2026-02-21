@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 import re
 import pathlib
-from llama_index.core import Document, VectorStoreIndex, Settings
+import json
+from llama_index.core import Document, VectorStoreIndex, Settings, StorageContext, load_index_from_storage
 from llama_index.vector_stores.faiss import FaissVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from transformers import pipeline
@@ -231,23 +232,56 @@ def main():
         print("Text:", result.text)
         print("Metadata:", result.metadata)
 
+PERSIST_DIR = pathlib.Path("../storage/slop_index")
+FAISS_INDEX_PATH = PERSIST_DIR / "faiss.index"
+RULE_MAP_PATH = PERSIST_DIR / "rule_map.json"
+
+
+def build_or_load_index(rules_file: str, persist_dir: pathlib.Path = PERSIST_DIR):
+    """Load a persisted FAISS index + ruleMap if available, otherwise build and save."""
+    model = HuggingFaceEmbedding(model_name="all-mpnet-base-v2")
+    Settings.llm = None
+
+    faiss_path = persist_dir / "faiss.index"
+    rule_map_path = persist_dir / "rule_map.json"
+
+    if faiss_path.exists() and rule_map_path.exists():
+        print("Loading persisted index from disk...")
+        f_index = faiss.read_index(str(faiss_path))
+        vstore = FaissVectorStore(faiss_index=f_index)
+        storage_context = StorageContext.from_defaults(
+            vector_store=vstore,
+            persist_dir=str(persist_dir)
+        )
+        index = load_index_from_storage(storage_context, embed_model=model)
+        with open(rule_map_path, "r", encoding="utf-8") as f:
+            ruleMap = json.load(f)
+        print("Index loaded from disk.")
+    else:
+        print("No persisted index found — building from scratch...")
+        parser = RuleParser(rules_file)
+        documents, ruleMap = parser.buildDocuments()
+
+        f_index = faiss.IndexFlatL2(768)
+        vstore = FaissVectorStore(faiss_index=f_index)
+        storage_context = StorageContext.from_defaults(vector_store=vstore)
+        index = VectorStoreIndex.from_documents(
+            documents, embed_model=model, storage_context=storage_context
+        )
+
+        persist_dir.mkdir(parents=True, exist_ok=True)
+        storage_context.persist(persist_dir=str(persist_dir))
+        faiss.write_index(f_index, str(faiss_path))
+        with open(rule_map_path, "w", encoding="utf-8") as f:
+            json.dump(ruleMap, f)
+        print(f"Index persisted to {persist_dir}")
+
+    return index, ruleMap
+
+
 def main2():
     print("starting")
-    parser = RuleParser("../rsrc/rulestext.txt")  # GPU auto-detected
-    documents, ruleMap = parser.buildDocuments()
-
-    # Embedding model
-    model = HuggingFaceEmbedding(model_name = "all-mpnet-base-v2")
-    print("Embedding model loaded.")
-
-    # FAISS setup
-    f_index = faiss.IndexFlatL2(768)
-    Settings.llm = None
-    vstore = FaissVectorStore(faiss_index = f_index)
-
-    # Build index
-    index = VectorStoreIndex.from_documents(documents, embed_model = model, vector_store = vstore)
-
+    index, ruleMap = build_or_load_index("../rsrc/rulestext.txt")
     rag = RAG(index, ruleMap)
     rag.ragSearch("Can I attack with a tapped creature?")
 
