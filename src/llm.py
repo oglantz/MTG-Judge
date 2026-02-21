@@ -66,7 +66,7 @@ class LLMClient:
             self._model_id,
             torch_dtype=torch.float16 if self._device == "cuda" else torch.float32,
             device_map=self._device,
-            attn_implementation="flash_attention_2",
+            attn_implementation="sdpa",
         )
         self._model.eval()
         print("Model loaded.")
