@@ -44,6 +44,7 @@ def main():
         query_context = query_processor.extract_context(query)
         query_context["rules_context"] = get_rules(query_context["cleaned_query"])
 
+        # starting inference...
         response = llm_client.generate(query_context)
         print("\n\n--- RULING ---")
         print(response)
