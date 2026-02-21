@@ -64,8 +64,9 @@ class LLMClient:
         self._tokenizer = AutoTokenizer.from_pretrained(self._model_id)
         self._model = AutoModelForCausalLM.from_pretrained(
             self._model_id,
-            dtype=torch.float16 if self._device == "cuda" else torch.float32,
+            torch_dtype=torch.float16 if self._device == "cuda" else torch.float32,
             device_map=self._device,
+            attn_implementation="flash_attention_2",
         )
         self._model.eval()
         print("Model loaded.")
@@ -111,11 +112,14 @@ class LLMClient:
             tokenize=False,
             add_generation_prompt=True,
         )
-        input_ids = self._tokenizer(prompt, return_tensors="pt")["input_ids"].to(self._device)
+        inputs = self._tokenizer(prompt, return_tensors="pt").to(self._device)
+        input_ids = inputs["input_ids"]
+        attention_mask = inputs["attention_mask"]
 
         with torch.no_grad():
             output_ids = self._model.generate(
                 input_ids,
+                attention_mask=attention_mask,
                 max_new_tokens=max_new_tokens,
                 temperature=temperature,
                 top_p=top_p,

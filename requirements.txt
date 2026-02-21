@@ -1,3 +1,12 @@
+# HuggingFace Transformers for LLM inference
+transformers
+accelerate
+
+# Flash Attention 2 for faster inference (install with: pip install flash-attn --no-build-isolation)
+# flash-attn
+
+# FOR GPU USAGE: pip install torch --index-url https://download.pytorch.org/whl/cu121
+
 # LlamaIndex core for RAG orchestration
 llama-index-core
 
@@ -17,4 +26,6 @@ faiss-cpu
 llama-index-retrievers-bm25
 
 # ChromaDB vector store integration for LlamaIndex
-llama-index-vector-stores-chroma chromadb
+
+# llama-index-vector-stores-chroma chromadb
+# not working? ^
