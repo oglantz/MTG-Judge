@@ -5,6 +5,7 @@ Main entry point for the application.
 import argparse
 from query_processer import QueryProcessor
 from llm import LLMClient
+from slop import get_rules
 
 
 def main():
@@ -16,9 +17,16 @@ def main():
     query = args.query
     query_processor = QueryProcessor()
     query_context = query_processor.extract_context(query)
-    
+
+    # Extract rules
+    relevant_rules = get_rules(query_context["cleaned_query"])
+    # Add rules to context
+    query_context["rules_context"] = relevant_rules
+
+    # print(query_context)
     llm_client = LLMClient()
     response = llm_client.generate(query_context)
+    print("----------------------\n\n\n\n LLM RESPONSE: \n -------------")
     print(response)
 
 

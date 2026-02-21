@@ -171,10 +171,10 @@ class RAG:
         output = ""
         results = list(self.retriever.retrieve(query))
 
-        for i, result in enumerate(results):
-            print(f"\nResult {i + 1}:")
-            print("Text:", result.text)
-            print("Metadata:", result.metadata)
+        # for i, result in enumerate(results):
+        #     print(f"\nResult {i + 1}:")
+        #     print("Text:", result.text)
+        #     print("Metadata:", result.metadata)
 
         for result in results[3:]:
             output += result.text + "\n"
@@ -182,8 +182,8 @@ class RAG:
         for result in results[0:3]: # get the top three
             output += self.ruleMap[result.metadata["rule_code"]]
 
-        print(f"\n\nOUTPUT:\n\n")
-        print(output)
+        # print(f"\n\nOUTPUT:\n\n")
+        # print(output)
         return output
 
 
@@ -279,11 +279,11 @@ def build_or_load_index(rules_file: str, persist_dir: pathlib.Path = PERSIST_DIR
     return index, ruleMap
 
 
-def main2():
-    print("starting")
+def get_rules(query: str) -> str:
+    print("starting rag")
     index, ruleMap = build_or_load_index("../rsrc/rulestext.txt")
     rag = RAG(index, ruleMap)
-    rag.ragSearch("Can I attack with a tapped creature?")
+    print("returning rules...")
+    return rag.ragSearch(query)
 
-if __name__ == "__main__":
-    main2()
+
