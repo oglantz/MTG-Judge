@@ -17,6 +17,7 @@ class RuleParser:
         self._topic = ""
         self._topicCode = ""
         self._rule = ""
+        self._fullRuleText = ""
         self._ruleCode = ""
         self._subruleCode = ""
         self._finalText = ""
@@ -42,6 +43,7 @@ class RuleParser:
     def buildDocuments(self):
         print("STARTING")
         documents = []
+        ruleMap = {}
         source = pathlib.Path(self._filename)
 
         with open(source, "r", encoding="utf-8") as tablefile:
@@ -54,9 +56,14 @@ class RuleParser:
                     self._state = "subrule"
                     self._subruleCode = match.group()
                     self._finalText = line
+                    self._fullRuleText += line
                 elif match := re.match(r"[0-9]{3}\.[0-9]+", line):
+                    if self._fullRuleText:
+                        ruleMap[self._ruleCode] = self._fullRuleText
+                        self._fullRuleText = ""
                     self._state = "rule"
                     self._rule = line
+                    self._fullRuleText += line
                     self._ruleCode = match.group()
                     self._finalText = line
                 elif match := re.match(r"[0-9]{3}", line):
@@ -69,6 +76,7 @@ class RuleParser:
                     self._sectionCode = match.group()
                 elif re.match(r"Example: ", line):
                     self._finalText += line
+                    self._fullRuleText += line
 
         # Add last document
         document = self._buildDocument()
@@ -79,19 +87,20 @@ class RuleParser:
         print("YOOHOO!!")
 
         # --- Batch auto-tagging for efficiency ---
-        if documents:
-            all_texts = [doc.text for doc in documents]
+        # if documents:
+        #     all_texts = [doc.text for doc in documents]
+        #
+        #     decision_results = self.tagger(all_texts, candidate_labels=self.decision_role_labels, multi_label=True)
+        #     system_results = self.tagger(all_texts, candidate_labels=self.system_labels, multi_label=True)
+        #
+        #     for i, doc in enumerate(documents):
+        #         doc.metadata.update({
+        #             "decision_role": [label for label, score in zip(decision_results[i]['labels'], decision_results[i]['scores']) if score > 0.7],
+        #             "system": [label for label, score in zip(system_results[i]['labels'], system_results[i]['scores']) if score > 0.7],
+        #         })
 
-            decision_results = self.tagger(all_texts, candidate_labels=self.decision_role_labels, multi_label=True)
-            system_results = self.tagger(all_texts, candidate_labels=self.system_labels, multi_label=True)
-
-            for i, doc in enumerate(documents):
-                doc.metadata.update({
-                    "decision_role": [label for label, score in zip(decision_results[i]['labels'], decision_results[i]['scores']) if score > 0.7],
-                    "system": [label for label, score in zip(system_results[i]['labels'], system_results[i]['scores']) if score > 0.7],
-                })
-
-        return documents
+        print(f"RULE MAP:\n{ruleMap}")
+        return documents, ruleMap
 
     def auto_tag(self, text):
         """Auto-tag a document using zero-shot classification (legacy, not used in batch)."""
@@ -148,6 +157,35 @@ class RuleParser:
         self._subruleCode = ""
         self._finalText = ""
         self._state = ""
+        self._fullRuleText = ""
+
+class RAG:
+    def __init__(self, vecStore: VectorStoreIndex, ruleMap: dict):
+        self.vecStore = vecStore
+        self.ruleMap = ruleMap
+        self.retriever = vecStore.as_retriever()
+        self.retriever.similarity_top_k = 10 # We can fuck with this later
+
+    def ragSearch(self, query: str):
+        output = ""
+        results = list(self.retriever.retrieve(query))
+
+        for i, result in enumerate(results):
+            print(f"\nResult {i + 1}:")
+            print("Text:", result.text)
+            print("Metadata:", result.metadata)
+
+        for result in results[3:]:
+            output += result.text + "\n"
+
+        for result in results[0:3]: # get the top three
+            output += self.ruleMap[result.metadata["rule_code"]]
+
+        print(f"\n\nOUTPUT:\n\n")
+        print(output)
+        return output
+
+
 
 def main():
     print("Loading parser...")
@@ -193,5 +231,25 @@ def main():
         print("Text:", result.text)
         print("Metadata:", result.metadata)
 
+def main2():
+    print("starting")
+    parser = RuleParser("../rsrc/rulestext.txt")  # GPU auto-detected
+    documents, ruleMap = parser.buildDocuments()
+
+    # Embedding model
+    model = HuggingFaceEmbedding(model_name = "all-mpnet-base-v2")
+    print("Embedding model loaded.")
+
+    # FAISS setup
+    f_index = faiss.IndexFlatL2(768)
+    Settings.llm = None
+    vstore = FaissVectorStore(faiss_index = f_index)
+
+    # Build index
+    index = VectorStoreIndex.from_documents(documents, embed_model = model, vector_store = vstore)
+
+    rag = RAG(index, ruleMap)
+    rag.ragSearch("Can I attack with a tapped creature?")
+
 if __name__ == "__main__":
-    main()
+    main2()
