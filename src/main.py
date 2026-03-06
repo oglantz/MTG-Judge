@@ -47,7 +47,7 @@ def main():
         query_context = query_processor.extract_context(query)
         tags = query_tagger.tag(query_context["cleaned_query"], query_context["oracle_context"])
         print(tags)
-        # query_context["rules_context"] = get_rules(query_context["cleaned_query"])
+        query_context["rules_context"] = get_rules(query_context["cleaned_query"])
 
         # # starting inference...
         # response = llm_client.generate(query_context)

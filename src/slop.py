@@ -102,7 +102,13 @@ class RuleParser:
             # map the descriptions to the tag names
             desc_to_name = {desc: name for name, desc in self.system_labels}
 
-            system_results = self.tagger(all_texts, candidate_labels=label_descriptions, multi_label=True)
+            CHUNK_SIZE = 64
+            system_results = []
+            for i in range(0, len(all_texts), CHUNK_SIZE):
+                batch = all_texts[i:i + CHUNK_SIZE]
+                batch_results = self.tagger(batch, candidate_labels=label_descriptions, multi_label=True, batch_size=CHUNK_SIZE)
+                system_results.extend(batch_results)
+                print(f"Tagged {min(i + CHUNK_SIZE, len(all_texts))} / {len(all_texts)} documents")
         
             for i, doc in enumerate(documents):
                 doc.metadata.update({
