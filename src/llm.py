@@ -7,6 +7,30 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 
 
 MODEL_ID = "Qwen/Qwen2.5-7B-Instruct"
+
+CLASSIFY_SYSTEM_PROMPT = """\
+You are a tag classifier for Magic: The Gathering rules queries.
+
+Your only job is to output a JSON array of matching tags from this exact list:
+  combat, casting, mana, abilities, state_based_actions, continuous_effects, priority
+
+Rules:
+- Output ONLY the JSON array. No explanation, no punctuation outside the array.
+- Choose every tag that meaningfully applies. Most queries need 1-3 tags.
+- If nothing applies, output [].
+- PRIMARY SIGNAL: classify based on what the question is ASKING about.
+  Ask yourself: which rule sections would a judge need to consult to answer this?
+  Words like "cast", "resolve", "tap for mana", "attack", "trigger", "priority"
+  in the question text are your strongest indicators.
+- SECONDARY SIGNAL: when card information is provided, use it only to catch
+  game systems the question implies but does not name explicitly.
+  Do not let card oracle text override what the question is literally asking.
+
+Valid output examples:
+  ["combat"]
+  ["abilities", "state_based_actions"]
+  ["casting", "priority", "mana"]\
+"""
 # Set to a local directory path to load from disk instead of HuggingFace cache.
 # After the first run, save the model locally with:
 #   tokenizer.save_pretrained("models/qwen2.5-7b-instruct")
@@ -129,4 +153,37 @@ class LLMClient:
 
         # Decode only the newly generated tokens
         generated = output_ids[0][input_ids.shape[-1]:]
+        return self._tokenizer.decode(generated, skip_special_tokens=True).strip()
+
+    def classify(self, prompt: str, *, max_new_tokens: int = 64) -> str:
+        """
+        Run a classification prompt through the model and return the raw output.
+
+        Args:
+            prompt: the fully-formed user message (few-shot examples + query)
+        """
+        self._load()
+
+        messages = [
+            {"role": "system", "content": CLASSIFY_SYSTEM_PROMPT},
+            {"role": "user",   "content": prompt},
+        ]
+
+        prompt_str = self._tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True,
+        )
+        inputs = self._tokenizer(prompt_str, return_tensors="pt").to(self._device)
+
+        with torch.no_grad():
+            output_ids = self._model.generate(
+                inputs["input_ids"],
+                attention_mask=inputs["attention_mask"],
+                max_new_tokens=max_new_tokens,
+                do_sample=False,
+                pad_token_id=self._tokenizer.eos_token_id,
+            )
+
+        generated = output_ids[0][inputs["input_ids"].shape[-1]:]
         return self._tokenizer.decode(generated, skip_special_tokens=True).strip()

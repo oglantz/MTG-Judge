@@ -152,8 +152,8 @@ class QueryProcessor:
             "card_context": card_context
         }
 
-    
+
 
 
 # q = QueryProcessor()
-# print(q.extract_context("Alessandra controls [[Mox Opal]] and [[Trinisphere]]. Alessandra casts another [[Mox Opal]]. After it resolves, can they tap it for mana before it's put into their graveyard?"))
+# print(q.extract_context("Alessandra controls [[Mox Opal]] and [[Trinisphere]]. Alessandra casts another [[Mox Opal]]. After it resolves, can they tap it for mana before it's put into their graveyard?")["card_context"])

@@ -7,9 +7,12 @@ from llama_index.vector_stores.faiss import FaissVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from pydantic_core import to_json
 from sentence_transformers import SentenceTransformer
+from llama_index.core.postprocessor import SentenceTransformerRerank
 from llama_index.retrievers.bm25 import BM25Retriever
 from llama_index.core.retrievers import QueryFusionRetriever
 import faiss
+
+ATTACK_KEYWORDS = "attack attacking declare attackers combat tapped untapped"
 
 @dataclass
 class Document:
@@ -81,7 +84,16 @@ class RuleParser:
         topic = md.get("topic", "").strip()
         section = md.get("section", "").strip()
 
-        embed_text = f"[{code}] {topic} | {section}\n{doc.getText().strip()}"
+        parent_rule = md.get("rule_text", "").strip()
+
+        keywords = ATTACK_KEYWORDS if "attack" in doc.getText().lower() else ""
+
+        embed_text = (
+            f"[{code}] {topic} | {section}\n"
+            f"{parent_rule}\n"
+            f"{doc.getText().strip()}\n"
+            f"Keywords: {keywords}".strip()
+        )
 
         return LlamaDocument(
             text=embed_text,
@@ -101,13 +113,17 @@ class RuleParser:
     def _buildRuleDocument(self):
         metadata = {"type": "rule", "section_code": self._sectionCode, "section": self._section,
                     "topic_code": self._topicCode, "topic": self._topic,
-                    "rule_code": self._ruleCode}
+                    "rule_code": self._ruleCode, "rule_text": self._rule}
+
+        # changed to use the LlamaDocument class instead of the Document class
         return self._to_li_document(Document(self._finalText, metadata))
 
     def _buildSubruleDocument(self):
         metadata = {"type": "subrule", "section_code": self._sectionCode, "section": self._section,
                     "topic_code": self._topicCode, "topic": self._topic,
-                    "rule_code": self._ruleCode, "subrule_code": self._subruleCode}
+                    "rule_code": self._ruleCode, "subrule_code": self._subruleCode, "rule_text": self._rule}
+
+        # changed to use the LlamaDocument class instead of the Document class
         return self._to_li_document(Document(self._finalText, metadata))
 
     def reset(self):
@@ -130,35 +146,42 @@ def main():
     documents = parser.buildDocuments()
     print("Documents parsed.")
 
-    [print(f"{doc}" + "\n") for doc in documents]
+    # [print(f"{doc}" + "\n") for doc in documents]
 
-    # model = HuggingFaceEmbedding(model_name = "all-mpnet-base-v2")
-    # print("Model loaded.")
-    # f_index = faiss.IndexFlatL2(768)
-    # Settings.llm = None
-    # vstore = FaissVectorStore(faiss_index = f_index)
-    # index = VectorStoreIndex.from_documents(documents, embed_model = model, vector_store = vstore)
+    model = HuggingFaceEmbedding(model_name = "BAAI/bge-base-en-v1.5", normalize = True)
+    print("Model loaded.")
+    f_index = faiss.IndexFlatIP(768)
+    Settings.llm = None
+    vstore = FaissVectorStore(faiss_index = f_index)
+    index = VectorStoreIndex.from_documents(documents, embed_model = model, vector_store = vstore)
     
-    # # dense retriever
-    # dense_retriever = index.as_retriever(similarity_top_k = 30)
+    # dense retriever
+    dense_retriever = index.as_retriever(similarity_top_k = 30)
     
-    # # BM25 retriever
-    # bm25_retriever = BM25Retriever.from_defaults(
-    #     nodes=index.docstore.docs.values(),
-    #     similarity_top_k=30
-    # )
+    # BM25 retriever
+    bm25_retriever = BM25Retriever.from_defaults(
+        nodes=index.docstore.docs.values(),
+        similarity_top_k=75
+    )
 
-    # # hybrid retriever
-    # hybrid_retriever = QueryFusionRetriever(
-    #     retrievers=[dense_retriever, bm25_retriever],
-    #     mode="reciprocal_rerank",  # very important: rewards documents that rank well in both systems
-    #     similarity_top_k=10
-    # )
+    # hybrid retriever
+    hybrid_retriever = QueryFusionRetriever(
+        retrievers=[dense_retriever, bm25_retriever],
+        mode="reciprocal_rerank",  # very important: rewards documents that rank well in both systems
+        similarity_top_k=50
+    )
 
-    # results = hybrid_retriever.retrieve("Can you attack with a tapped creature?")
+    # sentence transformer reranker
+    reranker = SentenceTransformerRerank(
+            model="BAAI/bge-reranker-base",
+            top_n=10  # final outputs
+    )
 
-    # for result in results:
-    #     print(result)
+    results = hybrid_retriever.retrieve("Can you attack with a tapped creature?")
+    reranked_results = reranker.postprocess_nodes(results, query_str="Can you attack with a tapped creature?")
+
+    for result in reranked_results:
+        print(result)
 
 if __name__ == "__main__":
     main()

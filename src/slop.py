@@ -38,8 +38,7 @@ class RuleParser:
         )
 
         # Candidate labels for tagging
-        self.decision_role_labels = ["restriction", "procedure", "triggers", "consequence", "definition"]
-        self.system_labels = ["combat", "casting", "mana", "triggered_abilities", "activated_abilities", "state_based_actions", "continuous_effects", "priority"]
+        self.system_labels = ["combat", "casting", "mana", "abilities", "state_based_actions", "continuous_effects", "priority"]
 
     def buildDocuments(self):
         print("STARTING")
@@ -88,33 +87,32 @@ class RuleParser:
         print("YOOHOO!!")
 
         # --- Batch auto-tagging for efficiency ---
-        # if documents:
-        #     all_texts = [doc.text for doc in documents]
-        #
-        #     decision_results = self.tagger(all_texts, candidate_labels=self.decision_role_labels, multi_label=True)
-        #     system_results = self.tagger(all_texts, candidate_labels=self.system_labels, multi_label=True)
-        #
-        #     for i, doc in enumerate(documents):
-        #         doc.metadata.update({
-        #             "decision_role": [label for label, score in zip(decision_results[i]['labels'], decision_results[i]['scores']) if score > 0.7],
-        #             "system": [label for label, score in zip(system_results[i]['labels'], system_results[i]['scores']) if score > 0.7],
-        #         })
+        if documents:
+            all_texts = [doc.text for doc in documents]
+        
+            system_results = self.tagger(all_texts, candidate_labels=self.system_labels, multi_label=True)
+        
+            for i, doc in enumerate(documents):
+                doc.metadata.update({
+                    "system": [label for label, score in zip(system_results[i]['labels'], system_results[i]['scores']) if score > 0.7],
+                })
+        
+        tagged = [d for d in documents if d.metadata.get("system")]
+        print(f"{len(tagged)} / {len(documents)} documents have at least one system tag")
 
         print(f"RULE MAP:\n{ruleMap}")
         return documents, ruleMap
 
-    def auto_tag(self, text):
-        """Auto-tag a document using zero-shot classification (legacy, not used in batch)."""
-        print("Starting auto-tag")
-        decision = self.tagger(text, candidate_labels=self.decision_role_labels, multi_label=True)
-        print("Decisions tagged")
-        system = self.tagger(text, candidate_labels=self.system_labels, multi_label=True)
-        print("System tagged")
+    # LEGACY: 
+    # def auto_tag(self, text):
+    #     """Auto-tag a document using zero-shot classification (legacy, not used in batch)."""
+    #     print("Starting auto-tag")
+    #     system = self.tagger(text, candidate_labels=self.system_labels, multi_label=True)
+    #     print("System tagged")
 
-        return {
-            "decision_role": [label for label, score in zip(decision['labels'], decision['scores']) if score > 0.5],
-            "system": [label for label, score in zip(system['labels'], system['scores']) if score > 0.5],
-        }
+    #     return {
+    #         "system": [label for label, score in zip(system['labels'], system['scores']) if score > 0.5],
+    #     }
 
     def _buildDocument(self):
         if self._state in ["section", "topic"]:
