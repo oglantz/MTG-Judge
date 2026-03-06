@@ -102,9 +102,10 @@ class RuleParser:
             # map the descriptions to the tag names
             desc_to_name = {desc: name for name, desc in self.system_labels}
 
-            CHUNK_SIZE = 64
+            CHUNK_SIZE = 16
             system_results = []
             for i in range(0, len(all_texts), CHUNK_SIZE):
+                print(f"starting batch {i/CHUNK_SIZE}\n")
                 batch = all_texts[i:i + CHUNK_SIZE]
                 batch_results = self.tagger(batch, candidate_labels=label_descriptions, multi_label=True, batch_size=CHUNK_SIZE)
                 system_results.extend(batch_results)
