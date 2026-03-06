@@ -110,17 +110,24 @@ class QueryProcessor:
 
         return "\n".join(formatted)
 
-    def build_card_context(self, query: str) -> str:
+    def _fetch_all_card_infos(self, query: str) -> list[tuple[str, dict]]:
+        """Fetch Scryfall data for every card mentioned in the query. Returns a list
+        of (original_name, info_dict) pairs, preserving order."""
+        return [
+            (name, self._scryfall.get_card_info(name))
+            for name in self.extract_card_names(query)
+        ]
+
+    def _format_card_context(self, card_infos: list[tuple[str, dict]], include_rulings: bool = True) -> str:
+        """Format a list of (name, info) pairs into a context string.
+
+        Args:
+            card_infos:      output of _fetch_all_card_infos.
+            include_rulings: when False, rulings are omitted (used for tagging).
         """
-        Extracts card names from the query, fetches their oracle text and rulings,
-        and returns a formatted string suitable for use as LLM context.
-        """
-        card_names = self.extract_card_names(query)
         sections = []
 
-        for name in card_names:
-            info = self._scryfall.get_card_info(name)
-
+        for name, info in card_infos:
             if "error" in info:
                 sections.append(f"[Card: {name}]\nNot found in Scryfall database.")
                 continue
@@ -130,7 +137,7 @@ class QueryProcessor:
             if info.get("oracle_text"):
                 lines.append(f"Oracle Text:\n{self._format_oracle_text(info['oracle_text'])}")
 
-            if info.get("has_rulings"):
+            if include_rulings and info.get("has_rulings"):
                 ruling_texts = [
                     f"- ({r['published_at']}) {self._clean_text(r['comment'])}"
                     for r in info["rulings"]
@@ -140,16 +147,29 @@ class QueryProcessor:
             sections.append("\n".join(lines))
 
         return "\n\n".join(sections)
-    
+
+    def build_card_context(self, query: str) -> str:
+        """
+        Extracts card names from the query, fetches their oracle text and rulings,
+        and returns a formatted string suitable for use as LLM context.
+        """
+        return self._format_card_context(self._fetch_all_card_infos(query), include_rulings=True)
+
     def extract_context(self, query: str) -> dict:
         """
         Extracts the cleaned query and card context from the query.
+
+        Returns a dict with:
+            cleaned_query:  query with [[Card Name]] brackets stripped.
+            card_context:   oracle text + rulings for every mentioned card (for the LLM).
+            oracle_context: oracle text only, no rulings (for the query tagger).
         """
         cleaned_query = self._clean_query(query)
-        card_context = self.build_card_context(query)
+        card_infos = self._fetch_all_card_infos(query)
         return {
             "cleaned_query": cleaned_query,
-            "card_context": card_context
+            "card_context":  self._format_card_context(card_infos, include_rulings=True),
+            "oracle_context": self._format_card_context(card_infos, include_rulings=False),
         }
 
 

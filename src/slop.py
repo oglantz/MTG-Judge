@@ -38,7 +38,14 @@ class RuleParser:
         )
 
         # Candidate labels for tagging
-        self.system_labels = ["combat", "casting", "mana", "abilities", "state_based_actions", "continuous_effects", "priority"]
+        self.system_labels = [("combat", "This Magic: The Gathering rule is related to combat"), 
+                              ("casting", "This Magic: The Gathering rule is related to casting"), 
+                              ("mana", "This Magic: The Gathering rule is related to mana"), 
+                              ("abilities", "This Magic: The Gathering rule is related to abilities"), 
+                              ("state-based actions", "This Magic: The Gathering rule is related to state-based actions"), 
+                              ("continuous effects", "This Magic: The Gathering rule is related to continuous effects"), 
+                              ("priority", "This Magic: The Gathering rule is related to priority"),
+                              ("stack", "This Magic: The Gathering rule is related to the stack")]
 
     def buildDocuments(self):
         print("STARTING")
@@ -89,12 +96,18 @@ class RuleParser:
         # --- Batch auto-tagging for efficiency ---
         if documents:
             all_texts = [doc.text for doc in documents]
-        
-            system_results = self.tagger(all_texts, candidate_labels=self.system_labels, multi_label=True)
+
+            # unpack tuples to get the descriptions
+            label_descriptions = [desc for _, desc in self.system_labels]
+            # map the descriptions to the tag names
+            desc_to_name = {desc: name for name, desc in self.system_labels}
+
+            system_results = self.tagger(all_texts, candidate_labels=label_descriptions, multi_label=True)
         
             for i, doc in enumerate(documents):
                 doc.metadata.update({
-                    "system": [label for label, score in zip(system_results[i]['labels'], system_results[i]['scores']) if score > 0.7],
+                    # Map the returned description back to its tag name
+                    "system": [desc_to_name[label] for label, score in zip(system_results[i]['labels'], system_results[i]['scores']) if score > 0.7],
                 })
         
         tagged = [d for d in documents if d.metadata.get("system")]

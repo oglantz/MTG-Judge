@@ -74,10 +74,10 @@ class ScryfallClient:
             raise
 
 
-def main():
-    client = ScryfallClient()
-    print(client.get_card_info("Trinisphere"))
+# def main():
+#     client = ScryfallClient()
+#     print(client.get_card_info("Trinisphere"))
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
