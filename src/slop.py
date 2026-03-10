@@ -3,11 +3,15 @@ import re
 import pathlib
 import json
 from llama_index.core import Document, VectorStoreIndex, Settings, StorageContext, load_index_from_storage
+from llama_index.core.vector_stores.types import MetadataFilters
 from llama_index.vector_stores.faiss import FaissVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from transformers import pipeline
 import torch
 import faiss
+
+from query_processer import QueryProcessor
+from query_tagger import QueryTagger
 
 class RuleParser:
     def __init__(self, filename, device=None):
@@ -194,10 +198,13 @@ class RAG:
     def __init__(self, vecStore: VectorStoreIndex, ruleMap: dict):
         self.vecStore = vecStore
         self.ruleMap = ruleMap
-        self.retriever = vecStore.as_retriever()
-        self.retriever.similarity_top_k = 10 # We can fuck with this later
+        
+    def ragSearch(self, query: str, tags: list[str]):
+        
+        retriever = self.vecStore.as_retriever(filters=MetadataFilters(key="system", value=tags))
+        retriever.similarity_top_k = 10 # We can f*ck with this later
 
-    def ragSearch(self, query: str):
+
         output = ""
         results = list(self.retriever.retrieve(query))
 
@@ -309,11 +316,20 @@ def build_or_load_index(rules_file: str, persist_dir: pathlib.Path = PERSIST_DIR
     return index, ruleMap
 
 DB_SOURCE = "../rsrc/rulestext.txt"
-def get_rules(query: str) -> str:
+_INDEX, _RULE_MAP = build_or_load_index("../rsrc/rulestext.txt")
+
+def get_query_context(query: str) -> str: # raw query
     print("starting rag")
-    index, ruleMap = build_or_load_index("../rsrc/rulestext.txt")
-    rag = RAG(index, ruleMap)
-    print("returning rules...")
-    return rag.ragSearch(query)
+    query_processor = QueryProcessor()
+    query_tagger = QueryTagger()
+    rag = RAG(_INDEX, _RULE_MAP)
+
+    query_context = query_processor.extract_context(query)
+    tags = query_tagger.tag(query_context["cleaned_query"], query_context["oracle_context"])
+    query_context["rules_context"] = rag.ragSearch(query_context["cleaned_query"], tags)
+
+    
+    print("returning context...")
+    return query_context
 
 
