@@ -134,8 +134,8 @@ class RuleParser:
         
             for i, doc in enumerate(documents):
                 doc.metadata.update({
-                    # Map the returned description back to its tag name, keeping only top 3
-                    "system": [desc_to_name[label] for label, score in zip(system_results[i]['labels'], system_results[i]['scores'])][:3],
+                    # Serialize to JSON string — Chroma requires scalar metadata values
+                    "system": json.dumps([desc_to_name[label] for label, score in zip(system_results[i]['labels'], system_results[i]['scores'])][:3]),
                 })
         
         tagged = [d for d in documents if d.metadata.get("system")]
@@ -145,7 +145,7 @@ class RuleParser:
         eval_dir = pathlib.Path("eval")
         eval_dir.mkdir(parents=True, exist_ok=True)
         tagger_eval = {
-            (doc.metadata.get("subrule_code") or doc.metadata.get("rule_code")): doc.metadata.get("system", [])
+            (doc.metadata.get("subrule_code") or doc.metadata.get("rule_code")): json.loads(doc.metadata.get("system", "[]"))
             for doc in documents
             if doc.metadata.get("subrule_code") or doc.metadata.get("rule_code")
         }
@@ -223,7 +223,7 @@ class RAG:
         tag_set = set(tags)
         output = ""
         all_results = list(retriever.retrieve(query))
-        results = [r for r in all_results if tag_set & set(r.metadata.get("system", []))][:10]
+        results = [r for r in all_results if tag_set & set(json.loads(r.metadata.get("system", "[]")))][:10]
 
         # for i, result in enumerate(results):
         #     print(f"\nResult {i + 1}:")
