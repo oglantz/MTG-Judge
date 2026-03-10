@@ -276,7 +276,7 @@ def main():
         print("Text:", result.text)
         print("Metadata:", result.metadata)
 
-PERSIST_DIR = pathlib.Path("../storage/slop_index")
+PERSIST_DIR = pathlib.Path("../storage/0.6_new_pred_top3_slop_index")
 FAISS_INDEX_PATH = PERSIST_DIR / "faiss.index"
 RULE_MAP_PATH = PERSIST_DIR / "rule_map.json"
 
