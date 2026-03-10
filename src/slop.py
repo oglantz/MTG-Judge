@@ -28,8 +28,11 @@ class RuleParser:
         self._finalText = ""
         self._state = ""
 
-        # Run on CPU to preserve VRAM for the main LLM
-        self.device = -1
+        # Auto-detect GPU if available
+        if device is None:
+            self.device = 0 if torch.cuda.is_available() else -1
+        else:
+            self.device = device
 
         # HuggingFace zero-shot pipeline for auto-tagging
         self.tagger = pipeline(
@@ -283,7 +286,7 @@ def main():
         print("Text:", result.text)
         print("Metadata:", result.metadata)
 
-PERSIST_DIR = pathlib.Path("../storage/NEW_0.6_og_pred_top3_chroma_slop_index")
+PERSIST_DIR = pathlib.Path("../storage/0.6_og_pred_top3_chroma_slop_index")
 RULE_MAP_PATH = PERSIST_DIR / "rule_map.json"
 
 

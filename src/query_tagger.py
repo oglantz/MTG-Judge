@@ -31,12 +31,15 @@ SYSTEM_LABELS: list[tuple[str, str]] = [
 
 
 class QueryTagger:
-    def __init__(self, device: int = -1):
+    def __init__(self, device=None):
         """
         Args:
             device: HuggingFace device id. Pass 0 for GPU, -1 for CPU.
-                    Defaults to CPU to preserve VRAM for the main LLM.
+                    Defaults to GPU if available, otherwise CPU.
         """
+        if device is None:
+            device = 0 if torch.cuda.is_available() else -1
+
         self._tagger = pipeline(
             "zero-shot-classification",
             model="facebook/bart-large-mnli",
