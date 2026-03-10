@@ -28,11 +28,8 @@ class RuleParser:
         self._finalText = ""
         self._state = ""
 
-        # Auto-detect GPU if available
-        if device is None:
-            self.device = 0 if torch.cuda.is_available() else -1
-        else:
-            self.device = device
+        # Run on CPU to preserve VRAM for the main LLM
+        self.device = -1
 
         # HuggingFace zero-shot pipeline for auto-tagging
         self.tagger = pipeline(
