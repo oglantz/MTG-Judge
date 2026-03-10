@@ -5,7 +5,7 @@ Main entry point for the application.
 import argparse
 from query_processer import QueryProcessor
 from llm import LLMClient
-from slop import get_rules
+from slop import get_query_context
 from query_tagger import QueryTagger
 from slop import build_or_load_index, DB_SOURCE
 
@@ -33,31 +33,28 @@ from slop import build_or_load_index, DB_SOURCE
 
 
 def main():
-    print("loading DB")
-    build_or_load_index(DB_SOURCE)
-    # print("Loading models (one-time)...")
-    # llm_client = LLMClient()
-    # llm_client._load()  # force load now instead of on first generate()
-    # query_tagger = QueryTagger()
-    # query_processor = QueryProcessor()
-    #
-    #
-    #
-    # while True:
-    #     query = input("\nAsk a rules question (or 'quit'): ").strip()
-    #     if query.lower() in ("quit", "exit", "q"):
-    #         break
-    #
-    #     query_context = query_processor.extract_context(query)
-    #     tags = query_tagger.tag(query_context["cleaned_query"], query_context["oracle_context"])
-    #     print(tags)
-    #     query_context["rules_context"] = get_rules(query_context["cleaned_query"])
-    #
-    #
-    #     # starting inference...
-    #     response = llm_client.generate(query_context)
-    #     print("\n\n--- RULING ---")
-    #     print(response)
+    # print("loading DB")
+    # build_or_load_index(DB_SOURCE)
+
+
+
+    
+    print("Loading models (one-time)...")
+    llm_client = LLMClient()
+    llm_client._load()  # force load now instead of on first generate()
+    
+    
+    while True:
+        query = input("\nAsk a rules question (or 'quit'): ").strip()
+        if query.lower() in ("quit", "exit", "q"):
+            break
+    
+        query_context = get_query_context(query)
+    
+        # starting inference...
+        response = llm_client.generate(query_context)
+        print("\n\n--- RULING ---")
+        print(response)
 
 
 if __name__ == "__main__":
