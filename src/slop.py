@@ -105,7 +105,6 @@ class RuleParser:
             CHUNK_SIZE = 64
             system_results = []
             for i in range(0, len(all_texts), CHUNK_SIZE):
-                print(f"starting batch {i/CHUNK_SIZE}\n")
                 batch = all_texts[i:i + CHUNK_SIZE]
                 batch_results = self.tagger(batch, candidate_labels=label_descriptions, multi_label=True, batch_size=CHUNK_SIZE)
                 system_results.extend(batch_results)
@@ -119,6 +118,19 @@ class RuleParser:
         
         tagged = [d for d in documents if d.metadata.get("system")]
         print(f"{len(tagged)} / {len(documents)} documents have at least one system tag")
+
+        # Save a record of each rule/subrule code mapped to its assigned tags
+        eval_dir = pathlib.Path("eval")
+        eval_dir.mkdir(parents=True, exist_ok=True)
+        tagger_eval = {
+            (doc.metadata.get("subrule_code") or doc.metadata.get("rule_code")): doc.metadata.get("system", [])
+            for doc in documents
+            if doc.metadata.get("subrule_code") or doc.metadata.get("rule_code")
+        }
+        eval_path = eval_dir / "tagger_eval.json"
+        with open(eval_path, "w", encoding="utf-8") as f:
+            json.dump(tagger_eval, f, indent=2)
+        print(f"Tagger eval saved to {eval_path}")
 
         print(f"RULE MAP:\n{ruleMap}")
         return documents, ruleMap
@@ -250,7 +262,7 @@ def main():
         print("Text:", result.text)
         print("Metadata:", result.metadata)
 
-PERSIST_DIR = pathlib.Path("../slop_index")
+PERSIST_DIR = pathlib.Path("../storage/slop_index")
 FAISS_INDEX_PATH = PERSIST_DIR / "faiss.index"
 RULE_MAP_PATH = PERSIST_DIR / "rule_map.json"
 
