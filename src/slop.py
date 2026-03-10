@@ -2,13 +2,13 @@ from dataclasses import dataclass
 import re
 import pathlib
 import json
-from llama_index.core import Document, VectorStoreIndex, Settings, StorageContext, load_index_from_storage
-from llama_index.core.vector_stores.types import MetadataFilters
-from llama_index.vector_stores.faiss import FaissVectorStore
+import chromadb
+from llama_index.core import Document, VectorStoreIndex, Settings, StorageContext
+from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from transformers import pipeline
 import torch
-import faiss
+
 
 from query_processer import QueryProcessor
 from query_tagger import QueryTagger
@@ -103,7 +103,10 @@ class RuleParser:
                 elif re.match(r"Example: ", line):
                     self._finalText += line
                     self._fullRuleText += line
-
+            
+            if self._fullRuleText and self._ruleCode:
+                ruleMap[self._ruleCode] = self._fullRuleText
+        
         # Add last document
         document = self._buildDocument()
         if document is not None:
@@ -132,7 +135,7 @@ class RuleParser:
             for i, doc in enumerate(documents):
                 doc.metadata.update({
                     # Map the returned description back to its tag name, keeping only top 3
-                    "system": [desc_to_name[label] for label, score in zip(system_results[i]['labels'], system_results[i]['scores']) if score > 0.6][:3],
+                    "system": [desc_to_name[label] for label, score in zip(system_results[i]['labels'], system_results[i]['scores'])][:3],
                 })
         
         tagged = [d for d in documents if d.metadata.get("system")]
@@ -146,7 +149,7 @@ class RuleParser:
             for doc in documents
             if doc.metadata.get("subrule_code") or doc.metadata.get("rule_code")
         }
-        eval_path = eval_dir / "tagger_eval.json"
+        eval_path = eval_dir / "no_threshold_top_3.json"
         with open(eval_path, "w", encoding="utf-8") as f:
             json.dump(tagger_eval, f, indent=2)
         print(f"Tagger eval saved to {eval_path}")
@@ -214,13 +217,13 @@ class RAG:
         self.ruleMap = ruleMap
         
     def ragSearch(self, query: str, tags: list[str]):
-        
-        retriever = self.vecStore.as_retriever(filters=MetadataFilters(key="system", value=tags))
-        retriever.similarity_top_k = 10 # We can f*ck with this later
+        retriever = self.vecStore.as_retriever()
+        retriever.similarity_top_k = 50  # cast wide net, then filter down
 
-
+        tag_set = set(tags)
         output = ""
-        results = list(self.retriever.retrieve(query))
+        all_results = list(retriever.retrieve(query))
+        results = [r for r in all_results if tag_set & set(r.metadata.get("system", []))][:10]
 
         # for i, result in enumerate(results):
         #     print(f"\nResult {i + 1}:")
@@ -283,28 +286,27 @@ def main():
         print("Text:", result.text)
         print("Metadata:", result.metadata)
 
-PERSIST_DIR = pathlib.Path("../storage/0.6_og_pred_top3_slop_index")
-FAISS_INDEX_PATH = PERSIST_DIR / "faiss.index"
+PERSIST_DIR = pathlib.Path("../storage/0.6_og_pred_top3_chroma_slop_index")
 RULE_MAP_PATH = PERSIST_DIR / "rule_map.json"
 
 
 def build_or_load_index(rules_file: str, persist_dir: pathlib.Path = PERSIST_DIR):
-    """Load a persisted FAISS index + ruleMap if available, otherwise build and save."""
-    model = HuggingFaceEmbedding(model_name="all-mpnet-base-v2")
+    """Load a persisted Chroma index + ruleMap if available, otherwise build and save."""
+    model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
     Settings.llm = None
 
-    faiss_path = persist_dir / "faiss.index"
     rule_map_path = persist_dir / "rule_map.json"
 
-    if faiss_path.exists() and rule_map_path.exists():
+    chroma_client = chromadb.PersistentClient(path=str(persist_dir))
+    collection = chroma_client.get_or_create_collection("mtg_rules")
+    vector_store = ChromaVectorStore(chroma_collection=collection)
+
+    if rule_map_path.exists() and collection.count() > 0:
         print("Loading persisted index from disk...")
-        f_index = faiss.read_index(str(faiss_path))
-        vstore = FaissVectorStore(faiss_index=f_index)
-        storage_context = StorageContext.from_defaults(
-            vector_store=vstore,
-            persist_dir=str(persist_dir)
+        index = VectorStoreIndex.from_vector_store(
+            vector_store,
+            embed_model=model
         )
-        index = load_index_from_storage(storage_context, embed_model=model)
         with open(rule_map_path, "r", encoding="utf-8") as f:
             ruleMap = json.load(f)
         print("Index loaded from disk.")
@@ -313,16 +315,12 @@ def build_or_load_index(rules_file: str, persist_dir: pathlib.Path = PERSIST_DIR
         parser = RuleParser(rules_file)
         documents, ruleMap = parser.buildDocuments()
 
-        f_index = faiss.IndexFlatL2(768)
-        vstore = FaissVectorStore(faiss_index=f_index)
-        storage_context = StorageContext.from_defaults(vector_store=vstore)
+        storage_context = StorageContext.from_defaults(vector_store=vector_store)
         index = VectorStoreIndex.from_documents(
             documents, embed_model=model, storage_context=storage_context
         )
 
         persist_dir.mkdir(parents=True, exist_ok=True)
-        storage_context.persist(persist_dir=str(persist_dir))
-        faiss.write_index(f_index, str(faiss_path))
         with open(rule_map_path, "w", encoding="utf-8") as f:
             json.dump(ruleMap, f)
         print(f"Index persisted to {persist_dir}")
@@ -332,7 +330,7 @@ def build_or_load_index(rules_file: str, persist_dir: pathlib.Path = PERSIST_DIR
 DB_SOURCE = "../rsrc/rulestext.txt"
 _INDEX, _RULE_MAP = build_or_load_index("../rsrc/rulestext.txt")
 
-def get_query_context(query: str) -> str: # raw query
+def get_query_context(query: str) -> dict: # raw query
     print("starting rag")
     query_processor = QueryProcessor()
     query_tagger = QueryTagger()
@@ -345,5 +343,4 @@ def get_query_context(query: str) -> str: # raw query
     
     print("returning context...")
     return query_context
-
 
