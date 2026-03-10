@@ -53,18 +53,17 @@ class QueryTagger:
     # Public API
     # ------------------------------------------------------------------
 
-    def tag(self, query: str, card_context: str = "", threshold: float = 0.8) -> list[str]:
+    def tag(self, query: str, card_context: str = "") -> list[str]:
         """
-        Classify a query and return a list of matching system tag names.
+        Classify a query and return the top 3 system tag names by confidence.
 
         Args:
             query:        the cleaned query text.
             card_context: optional oracle text / rulings block from QueryProcessor.
                           When provided it is appended to the query so the model
                           has richer context when scoring each label.
-            threshold:    minimum confidence score to include a label (default 0.7).
 
-        Returns an empty list if no label clears the threshold — never raises.
+        Returns a list of up to 3 tag names, ordered by descending confidence.
         """
         text = query
         if card_context:
@@ -76,5 +75,4 @@ class QueryTagger:
         return [
             self._desc_to_name[label]
             for label, score in zip(result["labels"], result["scores"])
-            if score >= threshold
-        ]
+        ][:3]
