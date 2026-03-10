@@ -43,28 +43,28 @@ class RuleParser:
 
         # Candidate labels for tagging
         # OG PREDICATES:
-        # self.system_labels = [("combat", "This Magic: The Gathering rule is related to combat"),
-        #                       ("casting", "This Magic: The Gathering rule is related to casting"),
-        #                       ("mana", "This Magic: The Gathering rule is related to mana"),
-        #                       ("abilities", "This Magic: The Gathering rule is related to abilities"),
-        #                       ("state-based actions", "This Magic: The Gathering rule is related to state-based actions"),
-        #                       ("continuous effects", "This Magic: The Gathering rule is related to continuous effects"),
-        #                       ("priority", "This Magic: The Gathering rule is related to priority"),
-        #                       ("stack", "This Magic: The Gathering rule is related to the stack")]
-
-        self.system_labels = [("combat",
-                               "This Magic: The Gathering rule is related to combat. This related to attacking and blocking"),
-                              ("casting",
-                               "This Magic: The Gathering rule is related to casting and spells. Instants, sorceries, creatures, artifacts, enchantments, planeswalkers, and battles are all spells."),
+        self.system_labels = [("combat", "This Magic: The Gathering rule is related to combat"),
+                              ("casting", "This Magic: The Gathering rule is related to casting"),
                               ("mana", "This Magic: The Gathering rule is related to mana"),
-                              ("abilities",
-                               "This Magic: The Gathering rule is related to abilities. Abilities are effects that cards have. If it involves a keyword that instills a card with an effect, it's ability."),
-                              ("state-based actions",
-                               "This Magic: The Gathering rule is related to state-based actions"),
-                              ("continuous effects",
-                               "This Magic: The Gathering rule is related to continuous effects"),
+                              ("abilities", "This Magic: The Gathering rule is related to abilities"),
+                              ("state-based actions", "This Magic: The Gathering rule is related to state-based actions"),
+                              ("continuous effects", "This Magic: The Gathering rule is related to continuous effects"),
                               ("priority", "This Magic: The Gathering rule is related to priority"),
                               ("stack", "This Magic: The Gathering rule is related to the stack")]
+
+        # self.system_labels = [("combat",
+        #                        "This Magic: The Gathering rule is related to combat. This related to attacking and blocking"),
+        #                       ("casting",
+        #                        "This Magic: The Gathering rule is related to casting and spells. Instants, sorceries, creatures, artifacts, enchantments, planeswalkers, and battles are all spells."),
+        #                       ("mana", "This Magic: The Gathering rule is related to mana"),
+        #                       ("abilities",
+        #                        "This Magic: The Gathering rule is related to abilities. Abilities are effects that cards have. If it involves a keyword that instills a card with an effect, it's ability."),
+        #                       ("state-based actions",
+        #                        "This Magic: The Gathering rule is related to state-based actions"),
+        #                       ("continuous effects",
+        #                        "This Magic: The Gathering rule is related to continuous effects"),
+        #                       ("priority", "This Magic: The Gathering rule is related to priority"),
+        #                       ("stack", "This Magic: The Gathering rule is related to the stack")]
 
     def buildDocuments(self):
         print("STARTING")
@@ -283,7 +283,7 @@ def main():
         print("Text:", result.text)
         print("Metadata:", result.metadata)
 
-PERSIST_DIR = pathlib.Path("../storage/0.6_new_pred_top3_slop_index")
+PERSIST_DIR = pathlib.Path("../storage/0.6_og_pred_top3_slop_index")
 FAISS_INDEX_PATH = PERSIST_DIR / "faiss.index"
 RULE_MAP_PATH = PERSIST_DIR / "rule_map.json"
 
