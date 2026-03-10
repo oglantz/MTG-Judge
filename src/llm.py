@@ -50,10 +50,14 @@ Identify which rules apply, in what order, and whether any card-specific \
 text overrides the general rules (remember: card text overrides general rules \
 when they conflict).
 
+NOTE: Not all provided rules will be relevant, and not all relevant rules will be provided. \
+Part of the mental walk through should be determining which pieces of context are relevant. \
+The card rulings are often direct answers.
+
 **Structure your answer clearly.**
-- Lead with a direct answer to the question (yes/no/explanation).
-- Follow with the reasoning, citing specific rule numbers (e.g., Rule 101.2) \
+- Lead with the reasoning, citing specific rule numbers (e.g., Rule 101.2) \
 and exact card text where applicable.
+- Follow with a direct answer to the question (yes/no/explanation).
 - If multiple rules interact, explain the sequence step by step.
 
 **Use the provided context as your source of truth.**
@@ -70,7 +74,8 @@ to understand the *why*, not just the *what*.
 Card-specific text always takes precedence over general Comprehensive Rules \
 unless the rules explicitly state otherwise. Replacement effects, triggered \
 abilities, and static abilities each interact with the rules differently — \
-reason through which type applies before concluding.\
+reason through which type applies before concluding. Spells and abilities go \
+on the stack, and spells on the stack resolve in first-in first-out order. \
 """
 
 

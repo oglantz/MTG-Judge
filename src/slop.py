@@ -102,7 +102,7 @@ class RuleParser:
             # map the descriptions to the tag names
             desc_to_name = {desc: name for name, desc in self.system_labels}
 
-            CHUNK_SIZE = 16
+            CHUNK_SIZE = 64
             system_results = []
             for i in range(0, len(all_texts), CHUNK_SIZE):
                 print(f"starting batch {i/CHUNK_SIZE}\n")
@@ -114,7 +114,7 @@ class RuleParser:
             for i, doc in enumerate(documents):
                 doc.metadata.update({
                     # Map the returned description back to its tag name
-                    "system": [desc_to_name[label] for label, score in zip(system_results[i]['labels'], system_results[i]['scores']) if score > 0.7],
+                    "system": [desc_to_name[label] for label, score in zip(system_results[i]['labels'], system_results[i]['scores']) if score > 0.6],
                 })
         
         tagged = [d for d in documents if d.metadata.get("system")]
@@ -250,7 +250,7 @@ def main():
         print("Text:", result.text)
         print("Metadata:", result.metadata)
 
-PERSIST_DIR = pathlib.Path("../storage/slop_index")
+PERSIST_DIR = pathlib.Path("../slop_index")
 FAISS_INDEX_PATH = PERSIST_DIR / "faiss.index"
 RULE_MAP_PATH = PERSIST_DIR / "rule_map.json"
 
@@ -296,7 +296,7 @@ def build_or_load_index(rules_file: str, persist_dir: pathlib.Path = PERSIST_DIR
 
     return index, ruleMap
 
-
+DB_SOURCE = "../rsrc/rulestext.txt"
 def get_rules(query: str) -> str:
     print("starting rag")
     index, ruleMap = build_or_load_index("../rsrc/rulestext.txt")
