@@ -33,28 +33,28 @@ from slop import build_or_load_index, DB_SOURCE
 
 
 def main():
-    # print("loading DB")
-    # build_or_load_index(DB_SOURCE)
+    print("loading DB")
+    build_or_load_index(DB_SOURCE)
 
 
 
     
-    print("Loading models (one-time)...")
-    llm_client = LLMClient()
-    llm_client._load()  # force load now instead of on first generate()
-    
-    
-    while True:
-        query = input("\nAsk a rules question (or 'quit'): ").strip()
-        if query.lower() in ("quit", "exit", "q"):
-            break
-    
-        query_context = get_query_context(query)
-    
-        # starting inference...
-        response = llm_client.generate(query_context)
-        print("\n\n--- RULING ---")
-        print(response)
+    # print("Loading models (one-time)...")
+    # llm_client = LLMClient()
+    # llm_client._load()  # force load now instead of on first generate()
+    #
+    #
+    # while True:
+    #     query = input("\nAsk a rules question (or 'quit'): ").strip()
+    #     if query.lower() in ("quit", "exit", "q"):
+    #         break
+    #
+    #     query_context = get_query_context(query)
+    #
+    #     # starting inference...
+    #     response = llm_client.generate(query_context)
+    #     print("\n\n--- RULING ---")
+    #     print(response)
 
 
 if __name__ == "__main__":
