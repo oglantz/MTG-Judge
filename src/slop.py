@@ -283,7 +283,7 @@ def main():
         print("Text:", result.text)
         print("Metadata:", result.metadata)
 
-PERSIST_DIR = pathlib.Path("../storage/0.6_og_pred_top3_chroma_slop_index")
+PERSIST_DIR = pathlib.Path("../storage/NEW_0.6_og_pred_top3_chroma_slop_index")
 RULE_MAP_PATH = PERSIST_DIR / "rule_map.json"
 
 
