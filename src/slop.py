@@ -131,8 +131,8 @@ class RuleParser:
         
             for i, doc in enumerate(documents):
                 doc.metadata.update({
-                    # Map the returned description back to its tag name
-                    "system": [desc_to_name[label] for label, score in zip(system_results[i]['labels'], system_results[i]['scores']) if score > 0.6],
+                    # Map the returned description back to its tag name, keeping only top 3
+                    "system": [desc_to_name[label] for label, score in zip(system_results[i]['labels'], system_results[i]['scores']) if score > 0.6][:3],
                 })
         
         tagged = [d for d in documents if d.metadata.get("system")]
