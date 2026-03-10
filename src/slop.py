@@ -42,12 +42,27 @@ class RuleParser:
         )
 
         # Candidate labels for tagging
-        self.system_labels = [("combat", "This Magic: The Gathering rule is related to combat"), 
-                              ("casting", "This Magic: The Gathering rule is related to casting"), 
-                              ("mana", "This Magic: The Gathering rule is related to mana"), 
-                              ("abilities", "This Magic: The Gathering rule is related to abilities"), 
-                              ("state-based actions", "This Magic: The Gathering rule is related to state-based actions"), 
-                              ("continuous effects", "This Magic: The Gathering rule is related to continuous effects"), 
+        # OG PREDICATES:
+        # self.system_labels = [("combat", "This Magic: The Gathering rule is related to combat"),
+        #                       ("casting", "This Magic: The Gathering rule is related to casting"),
+        #                       ("mana", "This Magic: The Gathering rule is related to mana"),
+        #                       ("abilities", "This Magic: The Gathering rule is related to abilities"),
+        #                       ("state-based actions", "This Magic: The Gathering rule is related to state-based actions"),
+        #                       ("continuous effects", "This Magic: The Gathering rule is related to continuous effects"),
+        #                       ("priority", "This Magic: The Gathering rule is related to priority"),
+        #                       ("stack", "This Magic: The Gathering rule is related to the stack")]
+
+        self.system_labels = [("combat",
+                               "This Magic: The Gathering rule is related to combat. This related to attacking and blocking"),
+                              ("casting",
+                               "This Magic: The Gathering rule is related to casting and spells. Instants, sorceries, creatures, artifacts, enchantments, planeswalkers, and battles are all spells."),
+                              ("mana", "This Magic: The Gathering rule is related to mana"),
+                              ("abilities",
+                               "This Magic: The Gathering rule is related to abilities. Abilities are effects that cards have. If it involves a keyword that instills a card with an effect, it's ability."),
+                              ("state-based actions",
+                               "This Magic: The Gathering rule is related to state-based actions"),
+                              ("continuous effects",
+                               "This Magic: The Gathering rule is related to continuous effects"),
                               ("priority", "This Magic: The Gathering rule is related to priority"),
                               ("stack", "This Magic: The Gathering rule is related to the stack")]
 
@@ -136,7 +151,6 @@ class RuleParser:
             json.dump(tagger_eval, f, indent=2)
         print(f"Tagger eval saved to {eval_path}")
 
-        print(f"RULE MAP:\n{ruleMap}")
         return documents, ruleMap
 
     # LEGACY: 
