@@ -4,6 +4,7 @@ import pathlib
 import json
 import chromadb
 from llama_index.core import Document, VectorStoreIndex, Settings, StorageContext
+from llama_index.core.vector_stores.types import MetadataFilters, MetadataFilter, FilterCondition
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from transformers import pipeline
@@ -103,10 +104,7 @@ class RuleParser:
                 elif re.match(r"Example: ", line):
                     self._finalText += line
                     self._fullRuleText += line
-            
-            if self._fullRuleText and self._ruleCode:
-                ruleMap[self._ruleCode] = self._fullRuleText
-        
+
         # Add last document
         document = self._buildDocument()
         if document is not None:
@@ -133,19 +131,20 @@ class RuleParser:
                 print(f"Tagged {min(i + CHUNK_SIZE, len(all_texts))} / {len(all_texts)} documents")
         
             for i, doc in enumerate(documents):
-                doc.metadata.update({
-                    # Serialize to JSON string — Chroma requires scalar metadata values
-                    "system": json.dumps([desc_to_name[label] for label, score in zip(system_results[i]['labels'], system_results[i]['scores'])][:3]),
-                })
-        
-        tagged = [d for d in documents if d.metadata.get("system")]
+                top_tags = [desc_to_name[label] for label, score in zip(system_results[i]['labels'], system_results[i]['scores'])][:3]
+                # Store as scalar fields so Chroma can filter on them
+                doc.metadata.update({f"system_{j}": tag for j, tag in enumerate(top_tags)})
+
+        tagged = [d for d in documents if d.metadata.get("system_0")]
         print(f"{len(tagged)} / {len(documents)} documents have at least one system tag")
 
         # Save a record of each rule/subrule code mapped to its assigned tags
         eval_dir = pathlib.Path("eval")
         eval_dir.mkdir(parents=True, exist_ok=True)
         tagger_eval = {
-            (doc.metadata.get("subrule_code") or doc.metadata.get("rule_code")): json.loads(doc.metadata.get("system", "[]"))
+            (doc.metadata.get("subrule_code") or doc.metadata.get("rule_code")): [
+                doc.metadata[f"system_{j}"] for j in range(3) if f"system_{j}" in doc.metadata
+            ]
             for doc in documents
             if doc.metadata.get("subrule_code") or doc.metadata.get("rule_code")
         }
@@ -217,13 +216,20 @@ class RAG:
         self.ruleMap = ruleMap
         
     def ragSearch(self, query: str, tags: list[str]):
-        retriever = self.vecStore.as_retriever()
-        retriever.similarity_top_k = 50  # cast wide net, then filter down
+        filters = MetadataFilters(
+            filters=[
+                MetadataFilter(key=f"system_{j}", value=tag)
+                for tag in tags
+                for j in range(3)
+            ],
+            condition=FilterCondition.OR
+        )
+        retriever = self.vecStore.as_retriever(filters=filters)
+        retriever.similarity_top_k = 10 # We can f*ck with this later
 
-        tag_set = set(tags)
+
         output = ""
-        all_results = list(retriever.retrieve(query))
-        results = [r for r in all_results if tag_set & set(json.loads(r.metadata.get("system", "[]")))][:10]
+        results = list(retriever.retrieve(query))
 
         # for i, result in enumerate(results):
         #     print(f"\nResult {i + 1}:")
