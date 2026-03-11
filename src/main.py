@@ -33,34 +33,33 @@ from slop import build_or_load_index, DB_SOURCE
 
 
 def main():
-    # print("loading DB")
-    # build_or_load_index(DB_SOURCE)
+
 
 
 
     
-    print("Loading models (one-time)...")
-    llm_client = LLMClient()
-    llm_client._load()  # force load now instead of on first generate()
-    
-    
-    while True:
-        query = input("\nAsk a rules question (or 'quit'): ").strip()
-        if query.lower() in ("quit", "exit", "q"):
-            break
-        
+     # print("Loading models (one-time)...")
+    # llm_client = LLMClient()
+    # llm_client._load()  # force load now instead of on first generate()
+    #
+    #
+    # while True:
+    #     query = input("\nAsk a rules question (or 'quit'): ").strip()
+    #     if query.lower() in ("quit", "exit", "q"):
+    #         break
+
         # query_tagger = QueryTagger()
         # query_processor = QueryProcessor()
         # query_context = query_processor.extract_context(query)
         # tags = query_tagger.tag(query_context["cleaned_query"], query_context["oracle_context"])
         # print(tags)
-        query_context = get_query_context(query)
-    
-        # starting inference...
-        print("Starting inference...")
-        response = llm_client.generate(query_context)
-        print("\n\n--- RULING ---")
-        print(response)
+        # query_context = get_query_context(query)
+        #
+        # # starting inference...
+        # print("Starting inference...")
+        # response = llm_client.generate(query_context)
+        # print("\n\n--- RULING ---")
+        # print(response)
 
 
 if __name__ == "__main__":
