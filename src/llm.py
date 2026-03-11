@@ -1,12 +1,12 @@
 """
-LLM interface for Phi-3.5-mini-instruct.
+mistralai/Mistral-7B-Instruct-v0.3.
 """
 
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 
-MODEL_ID = "microsoft/Phi-3.5-mini-instruct"
+MODEL_ID = "mistralai/Mistral-7B-Instruct-v0.3"
 
 CLASSIFY_SYSTEM_PROMPT = """\
 You are a tag classifier for Magic: The Gathering rules queries.
