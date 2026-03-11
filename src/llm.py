@@ -1,12 +1,12 @@
 """
-phi3.5-mini-instruct.
+LLM interface for Gemma-2-2B-IT.
 """
 
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 
-MODEL_ID = "microsoft/Phi-3.5-mini-instruct"
+MODEL_ID = "google/gemma-2-2b-it"
 
 CLASSIFY_SYSTEM_PROMPT = """\
 You are a tag classifier for Magic: The Gathering rules queries.
