@@ -1,12 +1,12 @@
 """
-LLM interface for Gemma-2-2B-IT.
+LLM interface for Qwen2.5-3B-Instruct.
 """
 
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 
-MODEL_ID = "google/gemma-2-2b-it"
+MODEL_ID = "Qwen/Qwen2.5-3B-Instruct"
 
 CLASSIFY_SYSTEM_PROMPT = """\
 You are a tag classifier for Magic: The Gathering rules queries.
