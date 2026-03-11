@@ -131,7 +131,7 @@ class RuleParser:
                 print(f"Tagged {min(i + CHUNK_SIZE, len(all_texts))} / {len(all_texts)} documents")
         
             for i, doc in enumerate(documents):
-                top_tags = [desc_to_name[label] for label, score in zip(system_results[i]['labels'], system_results[i]['scores'])][:3]
+                top_tags = [desc_to_name[label] for label, score in zip(system_results[i]['labels'], system_results[i]['scores']) if score > 0.6][:3]
                 # Store as scalar fields so Chroma can filter on them
                 doc.metadata.update({f"system_{j}": tag for j, tag in enumerate(top_tags)})
 
