@@ -148,7 +148,7 @@ class RuleParser:
             for doc in documents
             if doc.metadata.get("subrule_code") or doc.metadata.get("rule_code")
         }
-        eval_path = eval_dir / "no_threshold_top_3.json"
+        eval_path = eval_dir / "final_tags_v1.0.json"
         with open(eval_path, "w", encoding="utf-8") as f:
             json.dump(tagger_eval, f, indent=2)
         print(f"Tagger eval saved to {eval_path}")
@@ -292,7 +292,7 @@ def main():
         print("Text:", result.text)
         print("Metadata:", result.metadata)
 
-PERSIST_DIR = pathlib.Path("../storage/0.6_og_pred_top3_chroma_slop_index")
+PERSIST_DIR = pathlib.Path("../storage/final_vector_store_v1.0")
 RULE_MAP_PATH = PERSIST_DIR / "rule_map.json"
 
 
