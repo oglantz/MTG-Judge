@@ -34,6 +34,7 @@ def run_batch(queries: list[str], llm_client: LLMClient) -> list[dict]:
         except Exception as exc:
             response = f"ERROR: {exc}"
         results.append({"query": query, "response": response})
+        print(response)
         print(f"  Done.")
     return results
 

@@ -71,8 +71,8 @@ class QueryTagger:
             text = f"{query}\n\n{card_context}"
 
         result = self._tagger(text, candidate_labels=self._label_descriptions, multi_label=True)
-        for label, score in zip(result["labels"], result["scores"]):
-            print(f"LABEL: {label}\nSCORE: {score}")
+        # for label, score in zip(result["labels"], result["scores"]):
+        #     print(f"LABEL: {label}\nSCORE: {score}")
         return [
             self._desc_to_name[label]
             for label, score in zip(result["labels"], result["scores"])
