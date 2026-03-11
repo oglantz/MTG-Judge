@@ -33,12 +33,13 @@ from slop import build_or_load_index, DB_SOURCE
 
 
 def main():
+    pass
 
 
 
 
     
-     # print("Loading models (one-time)...")
+    # print("Loading models (one-time)...")
     # llm_client = LLMClient()
     # llm_client._load()  # force load now instead of on first generate()
     #
