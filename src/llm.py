@@ -1,12 +1,12 @@
 """
-LLM interface for Qwen2.5-7B-Instruct.
+LLM interface for Mistral-7B-Instruct-v0.3.
 """
 
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 
-MODEL_ID = "Qwen/Qwen2.5-7B-Instruct"
+MODEL_ID = "mistralai/Mistral-7B-Instruct-v0.3"
 
 CLASSIFY_SYSTEM_PROMPT = """\
 You are a tag classifier for Magic: The Gathering rules queries.
