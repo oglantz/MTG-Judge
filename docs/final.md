@@ -13,8 +13,12 @@ Magic: The Gathering has a rules document that is over 300 pages long. Not only 
 
 Local game stores need judges to run tournaments to get traffic to their stores, but there aren’t enough judges to go around and officially judge a tournament. It seems to follow that LLMs could serve to alleviate a shortage of labor in a domain based on interpreting natural language. However, most commercially available LLMs are extremely poor in their interpreting of rules. Many questions asked involve rules that aren’t necessarily semantically related to the query itself. The following text is a query made to OpenAI’s ChatGPT in the style of a judge exam, and its incorrect response.
 
-User: “Alessandra controls Mox Opal and Trinisphere. Alessandra casts another Mox Opal. After it resolves, can they tap it for mana before it's put into their graveyard?“  
-LLM Response: “Yes — Alessandra can tap the new Mox Opal for mana before it goes to the graveyard.”
+---
+
+**User:** *“Alessandra controls Mox Opal and Trinisphere. Alessandra casts another Mox Opal. After it resolves, can they tap it for mana before it's put into their graveyard?“*  
+**LLM Response:** *“Yes — Alessandra can tap the new Mox Opal for mana before it goes to the graveyard.”*
+
+---
 
 The correct answer is that Alessandra cannot tap the new Mox Opal, and it has to do with when the state-based action of the legend rule resolves; this mechanic isn’t mentioned at all in the query, and it is on the LLM to figure that out itself. This requires the LLM to have a functional understanding of the rules of Magic: The Gathering, direct access to the text of relevant cards, and the ability to reason about these context elements in tandem. Commercially available LLMs do not have these facilities.
 
@@ -136,19 +140,21 @@ After compiling the data, we looked at the specific questions that the models go
 
 ---
 
-**Question:** “Amy controls [[Trinisphere]] and a [[Sphere of Resistance]]. There are 9 creatures on the battlefield. What does Amy have to pay to cast [[Blasphemous Act]]?”  
-**Quen 2.5 3B**: “...   4. *Calculating Final Cost*: With Trinisphere's effect, the cost of Blasphemous Act is increased to three mana per creature on the battlefield. Since there are 9 creatures, the total cost is \(9 \times 3 = 27\) mana.”
+**Question:** *“Amy controls [[Trinisphere]] and a [[Sphere of Resistance]]. There are 9 creatures on the battlefield. What does Amy have to pay to cast [[Blasphemous Act]]?”*  
+**Quen 2.5 3B**: *“...   4. *Calculating Final Cost*: With Trinisphere's effect, the cost of Blasphemous Act is increased to three mana per creature on the battlefield. Since there are 9 creatures, the total cost is \(9 \times 3 = 27\) mana.”*
 
 ---
 
-Trinisphere Oracle Text:
-As long as this artifact is untapped, each spell that would cost less than three mana to cast costs three mana to cast. (Additional mana in the cost may be paid with any color of mana or colorless mana. For example, a spell that would cost {1}{B} to cast costs {2}{B} to cast instead.)  
-Hallucinations like these are common throughout Phi 3.5 and Qwen 2.5 3B’s answers. The failure modes of Mistral 7B were more specific. Continually, Mistral was confused by generally accepted Magic: The Gathering terminology. To show this, a snippet of a response from Mistral 7B will be shown.
+Trinisphere Oracle Text:  
+*As long as this artifact is untapped, each spell that would cost less than three mana to cast costs three mana to cast. (Additional mana in the cost may be paid with any color of mana or colorless mana. For example, a spell that would cost {1}{B} to cast costs {2}{B} to cast instead.)*  
+
+Hallucinations like these are common throughout Phi 3.5 and Qwen 2.5 3B’s answers. The failure modes of Mistral 7B were more specific. Continually, Mistral was confused by generally accepted Magic: The Gathering terminology. To show this, a snippet of a response from Mistral 7B will be shown.  
+
 
 ---
 
-**Question:** “Amy casts [[Fodder Launch]] targeting Nick’s [[Grizzly Bears]]. In response, Nick activates [[Bazaar Trader]] targeting [[Grizzly Bears]]. What happens?”  
-**Mistral 7B:** “First, we'll apply the replacement effect from Fodder Launch… Next, we'll apply the replacement effect from Bazaar Trader…”
+**Question:** *“Amy casts [[Fodder Launch]] targeting Nick’s [[Grizzly Bears]]. In response, Nick activates [[Bazaar Trader]] targeting [[Grizzly Bears]]. What happens?”*    
+**Mistral 7B:** *“First, we'll apply the replacement effect from Fodder Launch… Next, we'll apply the replacement effect from Bazaar Trader…”*  
 
 ---
 
